@@ -260,6 +260,24 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         [items addObject:flexSpace];
     }
 
+    // Middle - Slider control
+    if (numberOfPhotos > 1) {
+        hasItems = YES;
+        StepSlider *slider = [[StepSlider alloc] init];
+        [slider setMaxCount:[self calculateSliderMaxCount]];
+        [slider setLabelOffset:0];
+        [slider setTrackHeight:0];
+        [slider addTarget:self action:@selector(sliderValueChanged:) forControlEvents:UIControlEventValueChanged];
+        UIBarButtonItem *stepslider = [[UIBarButtonItem alloc] initWithCustomView:slider];
+        stepslider.width = 300;
+        _ignoreSliderValueChanged = false;
+        
+        [items addObject:flexSpace];
+        [items addObject: stepslider];
+        [items addObject:flexSpace];
+
+    }
+    
     // Right - Action
     if (_actionButton && !(!hasItems && !self.navigationItem.rightBarButtonItem)) {
         [items addObject:_actionButton];
@@ -325,6 +343,65 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     } else {
         return NO;
     }
+}
+
+#pragma mark - Slider calculations and events
+
+- (IBAction)sliderValueChanged:(id)sender {
+    if (!_ignoreSliderValueChanged) {
+        StepSlider* slider = (StepSlider *) sender;
+        [self setCurrentPhotoIndex:[self photoIndexWithSliderIndex:slider.index]];
+    }
+}
+
+- (int) calculateSliderMaxCount {
+    u_long sliderSteps = self.numberOfPhotos;
+    int divider = 1;
+    if ( self.numberOfPhotos > 60 ){
+        divider = 8;
+    } else if ( self.numberOfPhotos > 10 ) {
+        divider = 5;
+    }
+    
+    int extraDots = 1;
+    if (sliderSteps % divider != 0 && sliderSteps % divider != 1 ) {
+        extraDots = 2;
+    }
+    
+    return (int) sliderSteps/divider + extraDots;
+}
+
+- (int) sliderIndexWithPhotoIndex: (NSUInteger) photoIndex {
+    if (photoIndex == self.numberOfPhotos - 1){
+        return (int)_stepslider.maxCount - 1;
+    }
+    
+    int divider = 1;
+    if ( self.numberOfPhotos > 60 ){
+        divider = 8;
+    } else if ( self.numberOfPhotos > 10 ) {
+        divider = 5;
+    }
+    
+    return (int) photoIndex/divider;
+    
+}
+
+- (int) photoIndexWithSliderIndex: (NSUInteger) sliderIndex {
+    if (sliderIndex == _stepslider.maxCount - 1){
+        return (int)self.numberOfPhotos - 1;
+    }
+    
+    int multiplier = 1;
+    
+    if ( self.numberOfPhotos > 60 ){
+        multiplier = 8;
+    } else if ( self.numberOfPhotos > 10 ) {
+        multiplier = 5;
+    }
+    
+    return (int) sliderIndex*multiplier;
+    
 }
 
 #pragma mark - Appearance
@@ -1106,6 +1183,12 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 	// Buttons
 	_previousButton.enabled = (_currentPageIndex > 0);
 	_nextButton.enabled = (_currentPageIndex < numberOfPhotos - 1);
+    
+    if (_stepslider) {
+        _ignoreSliderValueChanged = true;
+        [_stepslider setIndex:[self sliderIndexWithPhotoIndex:_currentPageIndex]];
+        _ignoreSliderValueChanged = false;
+    }
     
     // Disable action button if there is no image or it's a video
     MWPhoto *photo = [self photoAtIndex:_currentPageIndex];

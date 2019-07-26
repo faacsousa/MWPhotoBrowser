@@ -11,6 +11,7 @@
 #import <MediaPlayer/MediaPlayer.h>
 #import "MWGridViewController.h"
 #import "MWZoomingScrollView.h"
+#import "StepSlider.h";
 
 // Declare private methods of browser
 @interface MWPhotoBrowser () {
@@ -36,6 +37,7 @@
 	NSTimer *_controlVisibilityTimer;
 	UIBarButtonItem *_previousButton, *_nextButton, *_actionButton, *_doneButton;
     MBProgressHUD *_progressHUD;
+    StepSlider *_stepslider;
     
     // Grid
     MWGridViewController *_gridController;
@@ -59,6 +61,7 @@
     UIActivityIndicatorView *_currentVideoLoadingIndicator;
     
     // Misc
+    BOOL _ignoreSliderValueChanged;
     BOOL _hasBelongedToViewController;
     BOOL _isVCBasedStatusBarAppearance;
     BOOL _statusBarShouldBeHidden;

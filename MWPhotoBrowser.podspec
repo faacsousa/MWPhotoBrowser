@@ -45,4 +45,7 @@ Pod::Spec.new do |s|
   # https://github.com/rs/SDWebImage/issues/1109
   s.dependency 'SDWebImage', '~> 3.7', '!= 3.7.2'
 
+  # Added by Cubeat
+  s.dependency 'StepSlider', '~> 1.2.1'
+
 end
