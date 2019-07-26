@@ -256,26 +256,24 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         [items addObject:flexSpace];
         [items addObject:_nextButton];
         [items addObject:flexSpace];
-    } else {
-        [items addObject:flexSpace];
-    }
-
-    // Middle - Slider control
-    if (numberOfPhotos > 1) {
+    } else if (numberOfPhotos > 1) {
+        // Middle - Slider control
         hasItems = YES;
         StepSlider *slider = [[StepSlider alloc] init];
         [slider setMaxCount:[self calculateSliderMaxCount]];
         [slider setLabelOffset:0];
         [slider setTrackHeight:0];
+        [slider setFrame:CGRectMake(0, 0, 250, 34)];
         [slider addTarget:self action:@selector(sliderValueChanged:) forControlEvents:UIControlEventValueChanged];
         UIBarButtonItem *stepslider = [[UIBarButtonItem alloc] initWithCustomView:slider];
-        stepslider.width = 300;
+        //stepslider.width = 250;
         _ignoreSliderValueChanged = false;
         
         [items addObject:flexSpace];
         [items addObject: stepslider];
         [items addObject:flexSpace];
-
+    } else {
+        [items addObject:flexSpace];
     }
     
     // Right - Action
