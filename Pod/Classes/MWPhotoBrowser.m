@@ -144,7 +144,11 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     if (!_enableGrid) _startOnGrid = NO;
 	
 	// View
-	self.view.backgroundColor = [UIColor blackColor];
+    if (self.backgroundColor) {
+        self.view.backgroundColor = self.backgroundColor;
+    } else {
+        self.view.backgroundColor = [UIColor whiteColor];
+    }
     self.view.clipsToBounds = YES;
 	
 	// Setup paging scrolling view
@@ -155,17 +159,18 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 	_pagingScrollView.delegate = self;
 	_pagingScrollView.showsHorizontalScrollIndicator = NO;
 	_pagingScrollView.showsVerticalScrollIndicator = NO;
-	_pagingScrollView.backgroundColor = [UIColor blackColor];
+    _pagingScrollView.backgroundColor = self.backgroundColor ? self.backgroundColor : [UIColor whiteColor];
     _pagingScrollView.contentSize = [self contentSizeForPagingScrollView];
 	[self.view addSubview:_pagingScrollView];
 	
     // Toolbar
     _toolbar = [[UIToolbar alloc] initWithFrame:[self frameForToolbarAtOrientation:self.interfaceOrientation]];
-    _toolbar.tintColor = [UIColor whiteColor];
-    _toolbar.barTintColor = nil;
+//    _toolbar.tintColor = [UIColor whiteColor];
+ //   _toolbar.barTintColor = nil;
     [_toolbar setBackgroundImage:nil forToolbarPosition:UIToolbarPositionAny barMetrics:UIBarMetricsDefault];
     [_toolbar setBackgroundImage:nil forToolbarPosition:UIToolbarPositionAny barMetrics:UIBarMetricsLandscapePhone];
-    _toolbar.barStyle = UIBarStyleBlackTranslucent;
+    _toolbar.barStyle = UIBarStyleDefault;
+    _toolbar.translucent = NO;
     _toolbar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
     
     // Toolbar Items
@@ -178,6 +183,15 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     }
     if (self.displayActionButton) {
         _actionButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(actionButtonPressed:)];
+    }
+    
+    if (self.displayRightBarActionButton){
+        if (self.rightBarActionButtonIcon){
+            _rightBarActionButton = [[UIBarButtonItem alloc] initWithImage:self.rightBarActionButtonIcon style:UIBarStyleDefault target:self action:@selector(rightBaractionButtonPressed:)];
+            
+        } else {
+            _rightBarActionButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemSearch target:self action:@selector(rightBaractionButtonPressed:)];
+        }
     }
     
     // Update
@@ -231,6 +245,10 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         [newBackButton setTitleTextAttributes:[NSDictionary dictionary] forState:UIControlStateHighlighted];
         _previousViewControllerBackButton = previousViewController.navigationItem.backBarButtonItem; // remember previous
         previousViewController.navigationItem.backBarButtonItem = newBackButton;
+        
+        if (_rightBarActionButton){
+            self.navigationItem.rightBarButtonItem = _rightBarActionButton;
+        }
     }
 
     // Toolbar items
@@ -261,8 +279,10 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         hasItems = YES;
         StepSlider *slider = [[StepSlider alloc] init];
         [slider setMaxCount:[self calculateSliderMaxCount]];
+        [slider setIndex:0];
         [slider setLabelOffset:0];
         [slider setTrackHeight:0];
+        [slider setSliderCircleColor:[UIColor blueColor]];
         [slider setFrame:CGRectMake(0, 0, 250, 34)];
         [slider addTarget:self action:@selector(sliderValueChanged:) forControlEvents:UIControlEventValueChanged];
         UIBarButtonItem *stepslider = [[UIBarButtonItem alloc] initWithCustomView:slider];
@@ -420,7 +440,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     // Set style
     if (!_leaveStatusBarAlone && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
         _previousStatusBarStyle = [[UIApplication sharedApplication] statusBarStyle];
-        [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent animated:animated];
+        [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleDefault animated:animated];
     }
     
     // Navigation bar appearance
@@ -517,14 +537,16 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (void)setNavBarAppearance:(BOOL)animated {
     [self.navigationController setNavigationBarHidden:NO animated:animated];
     UINavigationBar *navBar = self.navigationController.navigationBar;
-    navBar.tintColor = [UIColor whiteColor];
+    //navBar.tintColor = [UIColor whiteColor];
     navBar.barTintColor = nil;
     navBar.shadowImage = nil;
-    navBar.translucent = YES;
-    navBar.barStyle = UIBarStyleBlackTranslucent;
+    navBar.translucent = NO;
+    navBar.barStyle = UIBarStyleDefault;
     [navBar setBackgroundImage:nil forBarMetrics:UIBarMetricsDefault];
     [navBar setBackgroundImage:nil forBarMetrics:UIBarMetricsLandscapePhone];
+
 }
+
 
 - (void)storePreviousNavBarAppearance {
     _didSavePreviousStateOfNavBar = YES;
@@ -1416,6 +1438,9 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     if (self.navigationItem.rightBarButtonItem == _actionButton) {
         _gridPreviousRightNavItem = _actionButton;
         [self.navigationItem setRightBarButtonItem:nil animated:YES];
+    } else if (self.navigationItem.rightBarButtonItem == _rightBarActionButton) {
+        _gridPreviousRightNavItem = _actionButton;
+        [self.navigationItem setRightBarButtonItem:nil animated:YES];
     } else {
         _gridPreviousRightNavItem = nil;
     }
@@ -1445,7 +1470,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     _currentGridContentOffset = _gridController.collectionView.contentOffset;
     
     // Restore action button if it was removed
-    if (_gridPreviousRightNavItem == _actionButton && _actionButton) {
+    if ((_gridPreviousRightNavItem == _actionButton && _actionButton) || (_rightBarActionButton && _rightBarActionButton == _gridPreviousRightNavItem)) {
         [self.navigationItem setRightBarButtonItem:_gridPreviousRightNavItem animated:YES];
     }
     
@@ -1658,6 +1683,14 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 }
 
 #pragma mark - Actions
+
+- (void)rightBaractionButtonPressed:(id)sender {
+    // If they have defined a delegate method then just message them
+    if ([self.delegate respondsToSelector:@selector(photoBrowserRightBaractionButtonPressed:)]) {
+        // Let delegate handle things
+        [self.delegate photoBrowserRightBaractionButtonPressed:self];
+    }
+}
 
 - (void)actionButtonPressed:(id)sender {
 
