@@ -285,6 +285,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         [slider setSliderCircleColor:[UIColor blueColor]];
         [slider setFrame:CGRectMake(0, 0, 250, 34)];
         [slider addTarget:self action:@selector(sliderValueChanged:) forControlEvents:UIControlEventValueChanged];
+        _stepslider = slider;
         UIBarButtonItem *stepslider = [[UIBarButtonItem alloc] initWithCustomView:slider];
         //stepslider.width = 250;
         _ignoreSliderValueChanged = false;
